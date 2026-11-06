@@ -115,11 +115,20 @@ document.addEventListener("visibilitychange", () => {
 });
 
 // ---------------- rendering ----------------
+// The Seven Segment font is proportional ("1" is much narrower than "8"), so
+// a centered countdown jumps sideways as digits change. Give every digit a
+// fixed-width box instead.
+function showSeconds(seconds) {
+  el.timer.innerHTML = [...seconds.toFixed(1)]
+    .map((c) => (c === "." ? "." : `<span class="digit">${c}</span>`))
+    .join("");
+}
+
 function render() {
   el.home.textContent = state.home;
   el.away.textContent = state.away;
   if (state.pending !== null) {
-    el.timer.textContent = state.pending.toFixed(1);
+    showSeconds(state.pending);
   } else {
     el.timer.textContent = state.serve === "home" ? "  ->" : "<-  ";
   }
@@ -186,7 +195,7 @@ async function runTimer() {
   await new Promise((resolve) => {
     const tick = () => {
       const left = Math.max(0, Math.ceil((end - performance.now()) / 100) / 10);
-      el.timer.textContent = left.toFixed(1);
+      showSeconds(left);
       if (left > 0) requestAnimationFrame(tick); else resolve();
     };
     tick();

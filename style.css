@@ -111,6 +111,14 @@ html, body {
   line-height: 1;
 }
 
+/* width of the widest digit; right-aligned so a narrow "1" sits where a
+   seven-segment display draws it */
+.digit {
+  display: inline-block;
+  width: 0.502em;
+  text-align: right;
+}
+
 #controls {
   grid-area: ctrl;
   display: flex;
