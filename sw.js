@@ -1,6 +1,6 @@
 // Caches everything so the scoreboard works offline once installed.
 // Bump VERSION whenever you change any file so phones pick up the update.
-const VERSION = "jpx-v1";
+const VERSION = "jpx-v2";
 const FILES = [
   "./",
   "index.html",

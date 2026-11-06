@@ -60,10 +60,33 @@ async function loadSounds() {
 }
 const soundsLoaded = loadSounds();
 
+// iOS can suspend or "interrupt" the audio context at any time (idle, calls,
+// switching apps). Resume it on every touch, and play a silent buffer the first
+// time so the context is unlocked inside a real user gesture.
+let unlocked = false;
+function unlockAudio() {
+  if (!audioCtx) return;
+  if (audioCtx.state !== "running") audioCtx.resume().catch(() => {});
+  if (!unlocked) {
+    const src = audioCtx.createBufferSource();
+    src.buffer = audioCtx.createBuffer(1, 1, 22050);
+    src.connect(audioCtx.destination);
+    src.start(0);
+    unlocked = true;
+  }
+}
+["pointerdown", "touchstart", "touchend", "click"].forEach((type) =>
+  document.addEventListener(type, unlockAudio, { capture: true, passive: true }));
+
 // Plays a sound and resolves when it finishes (like the blocking playsound()).
-function play(name) {
+async function play(name) {
   const buf = buffers[name];
-  if (!audioCtx || !buf) return Promise.resolve();
+  if (!audioCtx || !buf) return;
+  if (audioCtx.state !== "running") {
+    try {
+      await Promise.race([audioCtx.resume(), sleep(300)]);
+    } catch (_) {}
+  }
   return new Promise((resolve) => {
     const src = audioCtx.createBufferSource();
     src.buffer = buf;
@@ -254,7 +277,6 @@ document.addEventListener("dblclick", (e) => e.preventDefault());
 el.splash.addEventListener("click", async () => {
   if (el.splash.classList.contains("started")) return;
   el.splash.classList.add("started");
-  if (audioCtx) audioCtx.resume();
   keepAwake();
   await soundsLoaded;
   await sleep(250);
