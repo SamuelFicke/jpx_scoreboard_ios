@@ -1,6 +1,9 @@
 // Caches everything so the scoreboard works offline once installed.
 // Bump VERSION whenever you change any file so phones pick up the update.
-const VERSION = "jpx-v2";
+// Other apps share the samuelficke.github.io origin (and its cache storage),
+// so only ever delete caches with this app's PREFIX.
+const PREFIX = "jpx-";
+const VERSION = PREFIX + "v3";
 const FILES = [
   "./",
   "index.html",
@@ -28,11 +31,14 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      Promise.all(keys
+        .filter((k) => k.startsWith(PREFIX) && k !== VERSION)
+        .map((k) => caches.delete(k))))
   );
   self.clients.claim();
 });
 
 self.addEventListener("fetch", (e) => {
-  e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request)));
+  e.respondWith(caches.match(e.request, { cacheName: VERSION })
+    .then((hit) => hit || fetch(e.request)));
 });
