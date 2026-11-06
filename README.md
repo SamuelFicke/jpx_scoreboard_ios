@@ -26,3 +26,6 @@ To use the clean "stop drinking" sound, set `USE_EXPLICIT = false` in `app.js`.
 
 ## Local testing
 `python3 -m http.server 8000` in this folder, then open http://localhost:8000.
+
+## Credits
+- Font: [Black Ops One](https://fonts.google.com/specimen/Black+Ops+One), SIL Open Font License 1.1 (see `fonts/black-ops-one-OFL.txt`).
