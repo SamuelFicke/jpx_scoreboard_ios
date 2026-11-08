@@ -75,7 +75,7 @@ function unlockAudio() {
     unlocked = true;
   }
 }
-["pointerdown", "touchstart", "touchend", "click"].forEach((type) =>
+["pointerdown", "touchstart", "touchend", "click", "keydown"].forEach((type) =>
   document.addEventListener(type, unlockAudio, { capture: true, passive: true }));
 
 // Plays a sound and resolves when it finishes (like the blocking playsound()).
@@ -135,6 +135,7 @@ function render() {
   el.timerButtons.forEach((b) =>
     b.classList.toggle("active", !state.pendingIsWin && Number(b.dataset.timer) === state.pending));
   el.board.classList.toggle("busy", state.busy);
+  if (window.onBoardChange) window.onBoardChange();
 }
 
 // ---------------- game logic ----------------
@@ -271,12 +272,47 @@ el.timerButtons.forEach((b) => b.addEventListener("click", () => {
   render();
 }));
 
+function resetScores() {
+  Object.assign(state, { home: 0, away: 0, serve: state.firstServer, pending: null, pendingIsWin: false });
+  render();
+}
 $("reset").addEventListener("click", () => {
   if (state.busy) return;
   if (!confirm("Reset the score to 0-0?")) return;
-  Object.assign(state, { home: 0, away: 0, serve: state.firstServer, pending: null, pendingIsWin: false });
-  render();
+  resetScores();
 });
+
+// ---------------- commands from a number pad or phone remote (remote.js) ----------------
+// Same rules as touch: while a timer is armed, a point press starts it instead.
+const TIMERS = el.timerButtons.map((b) => Number(b.dataset.timer));
+function command(cmd) {
+  if (!el.splash.classList.contains("hidden") || state.busy) return;
+  const [name, arg] = String(cmd).split(":");
+  const team = arg === "home" || arg === "away" ? arg : null;
+  if (name === "add" && team) {
+    if (state.pending !== null) runTimer(); else addPoint(team);
+  } else if (name === "sub" && team) {
+    if (state.pending === null) removePoint(team);
+  } else if (name === "serve") {
+    if (state.pending !== null) runTimer(); else { toggleServe(); render(); }
+  } else if (name === "go") {
+    if (state.pending !== null) runTimer();
+  } else if (name === "timer" && TIMERS.includes(Number(arg)) && !state.pendingIsWin) {
+    state.pending = state.pending === Number(arg) ? null : Number(arg);
+    render();
+  } else if (name === "reset") {
+    resetScores();
+  }
+}
+window.board = {
+  app: "jpx",
+  title: "JPX",
+  command,
+  snapshot: () => ({
+    app: "jpx", title: "JPX", home: state.home, away: state.away, serve: state.serve, busy: state.busy,
+    pending: state.pending, pendingIsWin: state.pendingIsWin, gameOver: false, timers: TIMERS,
+  }),
+};
 
 // Keep iOS from zooming / scrolling on double taps and pinches.
 document.addEventListener("gesturestart", (e) => e.preventDefault());

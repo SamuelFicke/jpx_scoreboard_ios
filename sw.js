@@ -3,12 +3,18 @@
 // Other apps share the samuelficke.github.io origin (and its cache storage),
 // so only ever delete caches with this app's PREFIX.
 const PREFIX = "jpx-";
-const VERSION = PREFIX + "v6";
+const VERSION = PREFIX + "v7";
 const FILES = [
   "./",
   "index.html",
   "style.css",
   "app.js",
+  "remote.js",
+  "remote.html",
+  "remote.css",
+  "remote-page.js",
+  "vendor/peerjs.min.js",
+  "vendor/qrcode.js",
   "manifest.webmanifest",
   "fonts/black-ops-one.ttf",
   "fonts/seven-segment.ttf",
